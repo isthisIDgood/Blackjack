@@ -27,18 +27,18 @@ function shuffleDeck() {
 
 //BlackJack Participant 
 class Player {
-    constructor(game) {
-        this.game = game
+    constructor(deck) {
+        this.deck = deck
         this.bet = 0
         this.hand = []
         this.handTotal = 0
         this.payout = 0
-        this.status = 'playing'
+        this.isPlaying = true
         this.isStand = false
         this.isDealer = false
     }
     checkStatus() {
-        this.handTotal >= 21 || this.isStand ? this.status = 'finished' : this.status = 'playing'
+        this.handTotal >= 21 || this.isStand ? this.isPlaying = false : this.isPlaying = true
     }
     placeBet(betValue) {
         this.bet = betValue
@@ -48,16 +48,25 @@ class Player {
         this.checkStatus()
     }
     hit() {
-        if (this.status === 'playing') {
-            this.hand.push(this.game.deck.pop())    //add card to hand from deck
+        if (this.isPlaying) {
+            this.hand.push(this.deck.pop())     //add card to hand from deck
             this.updateHandValue()
             this.checkStatus()
         }
     }
     updateHandValue() {
-        this.handTotal = 0                          //always reset total
+        this.handTotal = 0                      //always reset total
         for (let card of this.hand) {
             this.handTotal += card.value
+        }
+        // Check for aces
+        if (this.handTotal > 21) {
+            for (let card of this.hand) {
+                if (card.value === 11) {
+                    card.value = 1              //set value to 1 if handTotal > 21
+                    this.updateHandValue()
+                }
+            }
         }
     }
 }
@@ -67,14 +76,14 @@ class BlackJack {
     constructor(deck, numberOfPlayers) {
         this.deck = deck
         this.numberOfPlayers = numberOfPlayers
-        this.dealer = new Player(this)
+        this.dealer = new Player(this.deck)
         this.dealer.isDealer = true
         this.players = []
         this.players.push(this.dealer)  //dealer is always players[0]
     }
     addPlayers() {
         for (let i = 0; i < this.numberOfPlayers; i++) {
-            this.players.push(new Player(this))
+            this.players.push(new Player(this.deck))
         }
     }
     deal() {
@@ -86,7 +95,7 @@ class BlackJack {
         }
     }
     dealerTurn() {
-        while (this.dealer.status === 'playing') {
+        while (this.dealer.isPlaying) {
             this.dealer.handTotal <= 16 ? this.dealer.hit() : this.dealer.stand()
         }
     }
@@ -95,13 +104,14 @@ class BlackJack {
             if (player.handTotal > 21 || (player.handTotal < this.dealer.handTotal && this.dealer.handTotal <= 21)) {
                 player.payout = 0                                   //Too many!  Or lost to dealer
             } else if (player.handTotal === 21 && this.dealer.handTotal !== 21) {
+                console.log('BlackJack!')
                 player.payout = player.bet + (player.bet * 1.5)     //Blackjack!
             } else if (player.handTotal === this.dealer.handTotal) {
                 player.payout = player.bet                          //push
             } else {
                 player.payout = player.bet * 2
             }
-            console.log(`Status: ${player.status}.  Hand total: ${player.handTotal}.  Number of cards: ${player.hand.length}. Earnings: ${player.payout}`)
+            console.log(`IsPlaying: ${player.isPlaying}.  Hand total: ${player.handTotal}.  Number of cards: ${player.hand.length}. Earnings: ${player.payout}`)
         }
     }
 }
@@ -118,6 +128,7 @@ game.players[2].placeBet(50)
 game.deal()
 
 //simulate play
+game.players[1].hit()
 game.players[1].hit()
 game.players[2].stand()
 game.dealerTurn()
