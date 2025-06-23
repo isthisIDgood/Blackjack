@@ -60,13 +60,11 @@ class Player {
             this.handTotal += card.value
         }
         // Check for aces
-        if (this.handTotal > 21) {
-            for (let card of this.hand) {
-                if (card.value === 11) {
-                    card.value = 1              //set value to 1 if handTotal > 21
-                    this.updateHandValue()
-                }
-            }
+        let aceIndex = this.hand.findIndex((card) => card.value === 11)
+        if (this.handTotal > 21 && aceIndex !== -1) {
+            console.log('hello!')
+            this.hand[aceIndex].value = 1       //Update Ace value to 1 when exceeeding 21
+            this.updateHandValue()
         }
     }
 }
@@ -104,7 +102,6 @@ class BlackJack {
             if (player.handTotal > 21 || (player.handTotal < this.dealer.handTotal && this.dealer.handTotal <= 21)) {
                 player.payout = 0                                   //Too many!  Or lost to dealer
             } else if (player.handTotal === 21 && this.dealer.handTotal !== 21) {
-                console.log('BlackJack!')
                 player.payout = player.bet + (player.bet * 1.5)     //Blackjack!
             } else if (player.handTotal === this.dealer.handTotal) {
                 player.payout = player.bet                          //push
